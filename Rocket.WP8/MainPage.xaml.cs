@@ -15,6 +15,8 @@ using Windows.Devices.Geolocation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Maps.Controls;
 using Microsoft.Phone.Shell;
+using Rocket.Api;
+using Rocket.Data;
 using Rocket.WP8.Resources;
 
 namespace Rocket.WP8
@@ -24,6 +26,8 @@ namespace Rocket.WP8
         private GeoCoordinate _position;
         private MapLayer _locationLayer;
         private MapLayer _pinsLayer;
+
+        private ApiHandlerFabric _apiHandlerFabric;
 
         // Constructor
         public MainPage()
@@ -102,16 +106,30 @@ namespace Rocket.WP8
             Map.Layers.Add(_locationLayer);
         }
 
-        private void ShowPins()
+        private async void ShowPins()
         {
             _pinsLayer = new MapLayer();
             Map.Layers.Add(_pinsLayer);
 
-            var random = new Random();
-            for (int i = 0; i < 1000; i++)
+            _apiHandlerFabric = new ApiHandlerFabric();
+            var getter = _apiHandlerFabric.CashinPointsGetter();
+            var points = await getter.GetPointsAsync() as List<CashinPoint>;
+
+            var mkb = points.Where(i => i.Type.Equals("mkb")).ToList();
+            var other = points.Where(i => !i.Type.Equals("mkb")).ToList();
+
+            var pinImages = new Dictionary<string, string>
             {
-                var pinPosition = new GeoCoordinate(55.751667 + 0.5 * random.NextDouble() - 0.25, 37.617778 + 0.5 * random.NextDouble() - 0.25);
-                var pinImage = new Image {Source = new BitmapImage(new Uri("Assets/pin_ic.png", UriKind.Relative))};
+                {"mkb", "Assets/pin_mkb.png"},
+                {"ors", "Assets/pin_opc.png"},
+                {"intercommerz_office", "Assets/pin_icb.png"},
+                {"intercommerz_atm", "Assets/pin_ic.png"}
+            };
+
+            foreach (var point in other)
+            {
+                var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
+                var pinImage = new Image { Source = new BitmapImage(new Uri(pinImages[point.Type] ?? "Assets/pin_ic.png", UriKind.Relative)) };
 
                 var pinOverlay = new MapOverlay
                 {

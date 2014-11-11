@@ -160,6 +160,20 @@
       <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rocket.Api\Rocket.Api.csproj">
+      <Project>{927b17b1-707d-484c-b025-c2abd91366af}</Project>
+      <Name>Rocket.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rocket.Data\Rocket.Data.csproj">
+      <Project>{c41036a9-8c98-4db7-a989-91e0108fe49b}</Project>
+      <Name>Rocket.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rocket.Tools\Rocket.Tools.csproj">
+      <Project>{15372b98-6623-4a94-a927-8ccea207b07a}</Project>
+      <Name>Rocket.Tools</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
