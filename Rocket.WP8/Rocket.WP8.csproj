@@ -25,6 +25,7 @@
     <ValidateXaml>true</ValidateXaml>
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
     <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <NuGetPackageImportStamp>bb5eaa72</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -115,6 +116,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml">
       <SubType>Designer</SubType>
@@ -162,15 +164,15 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rocket.Api\Rocket.Api.csproj">
-      <Project>{927b17b1-707d-484c-b025-c2abd91366af}</Project>
+      <Project>{dba97455-37e6-444d-9250-5909c10ea65b}</Project>
       <Name>Rocket.Api</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rocket.Data\Rocket.Data.csproj">
-      <Project>{c41036a9-8c98-4db7-a989-91e0108fe49b}</Project>
+      <Project>{72569db1-6c33-4354-8c74-584a214844e9}</Project>
       <Name>Rocket.Data</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rocket.Tools\Rocket.Tools.csproj">
-      <Project>{15372b98-6623-4a94-a927-8ccea207b07a}</Project>
+      <Project>{3ef32b11-e309-4138-ac75-220c5164fc53}</Project>
       <Name>Rocket.Tools</Name>
     </ProjectReference>
   </ItemGroup>
@@ -184,4 +186,11 @@
   </Target>
   -->
   <ProjectExtensions />
+  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets'))" />
+  </Target>
 </Project>

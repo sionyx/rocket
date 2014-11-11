@@ -53,16 +53,6 @@
     <Compile Include="ToolsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Rocket.Data\Rocket.Data.csproj">
-      <Project>{c41036a9-8c98-4db7-a989-91e0108fe49b}</Project>
-      <Name>Rocket.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Rocket.Tools\Rocket.Tools.csproj">
-      <Project>{15372b98-6623-4a94-a927-8ccea207b07a}</Project>
-      <Name>Rocket.Tools</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
