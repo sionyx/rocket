@@ -1,27 +1,22 @@
-﻿using System;
+﻿using System.Diagnostics;
+using Microsoft.Phone.Controls;
+using Microsoft.Phone.Maps.Controls;
+using Rocket.Api;
+using Rocket.Data;
+using System;
 using System.Collections.Generic;
 using System.Device.Location;
-using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Windows.Devices.Geolocation;
-using Microsoft.Phone.Controls;
-using Microsoft.Phone.Maps.Controls;
-using Microsoft.Phone.Shell;
-using Rocket.Api;
-using Rocket.Data;
-using Rocket.WP8.Resources;
+using Rocket.Tools.Geo;
 
 namespace Rocket.WP8
 {
-    public partial class MainPage : PhoneApplicationPage
+    public partial class MainPage
     {
         private GeoCoordinate _position;
         private MapLayer _locationLayer;
@@ -67,6 +62,7 @@ namespace Rocket.WP8
         private void Map_OnZoomLevelChanged(object sender, MapZoomLevelChangedEventArgs e)
         {
             Map.LandmarksEnabled = (Map.ZoomLevel > 17);
+            Debug.WriteLine("ZoomLevel: {0}", Map.ZoomLevel);
         }
 
         private void ZoomIn(object sender, GestureEventArgs e)
@@ -92,8 +88,7 @@ namespace Rocket.WP8
             _position = CoordinateConverter.ConvertGeocoordinate(coordinate.Coordinate);
             Map.SetView(_position, Map.ZoomLevel);
 
-            var myPos = new Image();
-            myPos.Source = new BitmapImage(new Uri("Assets/pin_me.png", UriKind.Relative));
+            var myPos = new Image {Source = new BitmapImage(new Uri("Assets/pin_me.png", UriKind.Relative))};
 
             var myLocationOverlay = new MapOverlay
             {
@@ -113,12 +108,55 @@ namespace Rocket.WP8
 
             _apiHandlerFabric = new ApiHandlerFabric();
             var getter = _apiHandlerFabric.CashinPointsGetter();
-            var points = await getter.GetPointsAsync() as List<CashinPoint>;
+            var points = await getter.GetPointsAsync();
 
             var mkb = points.Where(i => i.Type.Equals("mkb")).ToList();
+            var ors = points.Where(i => i.Type.Equals("ors")).ToList();
             var other = points.Where(i => !i.Type.Equals("mkb")).ToList();
 
-            var pinImages = new Dictionary<string, string>
+            _pointsToDisplay = ors;
+            UpdatePointsInView();
+
+            //foreach (var point in ors)
+            //{
+            //    var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
+            //    var pinImage = new Image { Source = new BitmapImage(new Uri(pinImages[point.Type] ?? "Assets/pin_ic.png", UriKind.Relative)) };
+
+            //    var pinOverlay = new MapOverlay
+            //    {
+            //        Content = pinImage,
+            //        PositionOrigin = new Point(0, 1),
+            //        GeoCoordinate = pinPosition
+            //    };
+
+            //    _pinsLayer.Add(pinOverlay);
+            //}
+
+            //var geotools = new GeoTools();
+            //var clusters = geotools.ClusterizePoints(ors.OfType<IGeoPoint>().ToList(), 50);
+
+            //foreach (var point in clusters.Points)
+            //{
+            //    var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
+            //    var pinImage = new Image { Source = new BitmapImage(new Uri(pinImages["ors"] ?? "Assets/pin_ic.png", UriKind.Relative)) };
+
+            //    var pinOverlay = new MapOverlay
+            //    {
+            //        Content = pinImage,
+            //        PositionOrigin = new Point(0, 1),
+            //        GeoCoordinate = pinPosition
+            //    };
+
+            //    _pinsLayer.Add(pinOverlay);
+            //}
+
+        }
+
+        private readonly List<CashinPoint> _pointsOnMap = new List<CashinPoint>();
+        private List<CashinPoint> _pointsToDisplay;
+        private readonly Dictionary<CashinPoint, MapOverlay> _pointOverlays = new Dictionary<CashinPoint, MapOverlay>();
+
+        private readonly Dictionary<string, string> _pinImages = new Dictionary<string, string>
             {
                 {"mkb", "Assets/pin_mkb.png"},
                 {"ors", "Assets/pin_opc.png"},
@@ -126,20 +164,66 @@ namespace Rocket.WP8
                 {"intercommerz_atm", "Assets/pin_ic.png"}
             };
 
-            foreach (var point in other)
+        public void UpdatePointsInView()
+        {
+            if (_pointsToDisplay == null) return;
+
+
+
+            var pointsCopy = _pointsOnMap.ToList();
+
+            var topLeft = Map.ConvertViewportPointToGeoCoordinate(new Point(0, 0));
+            var bottomRight = Map.ConvertViewportPointToGeoCoordinate(new Point(Map.ActualWidth, Map.ActualHeight));
+
+
+            foreach (var point in pointsCopy)
             {
-                var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
-                var pinImage = new Image { Source = new BitmapImage(new Uri(pinImages[point.Type] ?? "Assets/pin_ic.png", UriKind.Relative)) };
-
-                var pinOverlay = new MapOverlay
+                if (!PointInBox(point, topLeft, bottomRight))
                 {
-                    Content = pinImage,
-                    PositionOrigin = new Point(0, 1),
-                    GeoCoordinate = pinPosition
-                };
-
-                _pinsLayer.Add(pinOverlay);
+                    _pinsLayer.Remove(_pointOverlays[point]);
+                    _pointOverlays.Remove(point);
+                    _pointsOnMap.Remove(point);
+                    //Debug.WriteLine("pinOverlay Removed {0}", _pointsOnMap.Count);
+                }
             }
+
+            foreach (var point in _pointsToDisplay)
+            {
+                if (_pointsOnMap.Contains(point)) continue;
+
+                if (PointInBox(point, topLeft, bottomRight))
+                {
+                    var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
+                    var pinImage = new Image { Source = new BitmapImage(new Uri(_pinImages["ors"] ?? "Assets/pin_ic.png", UriKind.Relative)) };
+
+                    var pinOverlay = new MapOverlay
+                    {
+                        Content = pinImage,
+                        PositionOrigin = new Point(0, 1),
+                        GeoCoordinate = pinPosition
+                    };
+
+                    _pinsLayer.Add(pinOverlay);
+                    _pointsOnMap.Add(point);
+                    _pointOverlays[point] = pinOverlay;
+                    //Debug.WriteLine("pinOverlay Added {0}", _pointsOnMap.Count);
+                }
+            }
+        }
+
+        private static bool PointInBox(IGeoPoint point, GeoCoordinate leftTopCorner, GeoCoordinate rightBottomCorner)
+        {
+            return (point != null) && (leftTopCorner != null) && (rightBottomCorner != null) &&
+                   (point.Lat <= leftTopCorner.Latitude) &&
+                   (point.Lat >= rightBottomCorner.Latitude) &&
+                   (point.Lon >= leftTopCorner.Longitude) &&
+                   (point.Lon <= rightBottomCorner.Longitude);
+        }
+
+        private void Map_OnCenterChanged(object sender, MapCenterChangedEventArgs e)
+        {
+            UpdatePointsInView();
+            //Debug.WriteLine("OnCenterChanged: {0}:{1}", Map.Center.Latitude, Map.Center.Longitude);
         }
     }
 

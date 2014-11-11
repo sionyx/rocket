@@ -55,7 +55,7 @@
 
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="0,0,0,0">
-            <maps:Map x:Name="Map" ZoomLevelChanged="Map_OnZoomLevelChanged"/>
+            <maps:Map x:Name="Map" ZoomLevelChanged="Map_OnZoomLevelChanged" CenterChanged="Map_OnCenterChanged" />
 
             <Button BorderThickness="0" Margin="0,0,24,96" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" Tap="ZoomIn">
                 <Image Source="Assets/but_zoom_in.png" Width="49" Height="49" />

@@ -8,9 +8,9 @@ namespace Rocket.Tools.Geo
     public class GeoTools
     {
         private const double EarthRadius = 6372.795d;
-        private const double Distance = 1000d;
+        //private const double Distance = 1000d;
 
-        public GeoCluster ClusterizePoints(IGeoPoint[] points)
+        public GeoCluster ClusterizePoints(List<IGeoPoint> points, double radius)
         {
             var clusters = new List<GeoCluster>();
 
@@ -21,7 +21,7 @@ namespace Rocket.Tools.Geo
                 foreach (var cluster in clusters)
                 {
                     var dist = GeoDistance(point, cluster);
-                    if (dist > Distance) continue;
+                    if (dist > radius) continue;
 
                     cluster.Points.Add(point);
                     added = true;
@@ -38,6 +38,12 @@ namespace Rocket.Tools.Geo
                 };
 
                 clusters.Add(newcluster);
+            }
+
+            foreach (var cluster in clusters)
+            {
+                cluster.Lat = cluster.Points.Sum(p => p.Lat)/cluster.Points.Count;
+                cluster.Lon = cluster.Points.Sum(p => p.Lon) / cluster.Points.Count;
             }
 
             return new GeoCluster {Lat = 0, Lon = 0, Points = clusters.OfType<IGeoPoint>().ToList()};

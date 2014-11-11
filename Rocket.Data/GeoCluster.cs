@@ -6,6 +6,6 @@ namespace Rocket.Data
     {
         public double Lat { get; set; }
         public double Lon { get; set; }
-        public List<IGeoPoint> Points { get; set; }
+        public IList<IGeoPoint> Points { get; set; }
     }
 }
