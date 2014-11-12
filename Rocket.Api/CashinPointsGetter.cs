@@ -12,7 +12,7 @@ namespace Rocket.Api
             _baseGetter = baseGetter;
         }
 
-        public async Task<List<CashinPoint>> GetPointsAsync()
+        public async Task<IList<CashinPoint>> GetPointsAsync()
         {
             var data = await _baseGetter.GetData<CashinPointsResponse>("cashin.json");
             return (data != null) ? data.Points : null;

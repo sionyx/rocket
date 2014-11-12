@@ -10,7 +10,7 @@ namespace Rocket.Tools.Geo
         private const double EarthRadius = 6372.795d;
         //private const double Distance = 1000d;
 
-        public GeoCluster ClusterizePoints(List<IGeoPoint> points, double radius)
+        static public IList<IGeoPoint> ClusterizePoints(IEnumerable<IGeoPoint> points, double radius)
         {
             var clusters = new List<GeoCluster>();
 
@@ -25,6 +25,9 @@ namespace Rocket.Tools.Geo
 
                     cluster.Points.Add(point);
                     added = true;
+
+                    cluster.Lat = (cluster.Lat*(cluster.Points.Count - 1) + point.Lat)/cluster.Points.Count;
+                    cluster.Lon = (cluster.Lon*(cluster.Points.Count - 1) + point.Lon)/cluster.Points.Count;
                     break;
                 }
 
@@ -34,22 +37,17 @@ namespace Rocket.Tools.Geo
                 {
                     Lat = point.Lat,
                     Lon = point.Lon,
+                    Type = point.Type,
                     Points = new List<IGeoPoint> {point}
                 };
 
                 clusters.Add(newcluster);
             }
 
-            foreach (var cluster in clusters)
-            {
-                cluster.Lat = cluster.Points.Sum(p => p.Lat)/cluster.Points.Count;
-                cluster.Lon = cluster.Points.Sum(p => p.Lon) / cluster.Points.Count;
-            }
-
-            return new GeoCluster {Lat = 0, Lon = 0, Points = clusters.OfType<IGeoPoint>().ToList()};
+            return clusters.OfType<IGeoPoint>().ToList();
         }
 
-        public double GeoDistance(IGeoPoint point1, IGeoPoint point2)
+        static public double GeoDistance(IGeoPoint point1, IGeoPoint point2)
         {
             var cl1 = Math.Cos(point1.Lat);
             var cl2 = Math.Cos(point2.Lat);
@@ -64,5 +62,15 @@ namespace Rocket.Tools.Geo
 
             return Math.Atan2(y, x) * EarthRadius;
         }
+
+        public static int GeoHashFloor(double lat, double lon)
+        {
+            return (int)(((UInt32)Math.Floor((90 + lat) * 200)) << 16 | ((UInt32)Math.Floor((180 + lon) * 100)));
+        }
+        public static int GeoHashCeil(double lat, double lon)
+        {
+            return (int)(((UInt32)Math.Ceiling((90 + lat) * 200)) << 16 | ((UInt32)Math.Ceiling((180 + lon) * 100)));
+        }
+
     }
 }

@@ -4,5 +4,6 @@
     {
         double Lat { get; set; }
         double Lon { get; set; }
+        string Type { get; set; }
     }
 }

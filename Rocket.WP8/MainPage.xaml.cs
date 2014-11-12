@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Maps.Controls;
 using Rocket.Api;
@@ -22,6 +23,24 @@ namespace Rocket.WP8
         private MapLayer _locationLayer;
         private MapLayer _pinsLayer;
 
+        private IEnumerable<IGeoPoint> _permanentPoints;
+        private IEnumerable<IGeoPoint> _clusterizablePoints; 
+
+        private readonly Dictionary<int, IEnumerable<IGeoPoint>> _zoomClusters = new Dictionary<int, IEnumerable<IGeoPoint>>();
+        private readonly List<IGeoPoint> _pointsOnMap = new List<IGeoPoint>();
+        private IEnumerable<IGeoPoint> _pointsToDisplay;
+        private readonly Dictionary<IGeoPoint, MapOverlay> _pointOverlays = new Dictionary<IGeoPoint, MapOverlay>();
+
+        private readonly Dictionary<string, string> _pinImages = new Dictionary<string, string>
+            {
+                {"mkb", "Assets/pin_mkb.png"},
+                {"ors", "Assets/pin_opc.png"},
+                {"intercommerz_office", "Assets/pin_icb.png"},
+                {"intercommerz_atm", "Assets/pin_ic.png"}
+            };
+
+        private int _currentZoomLevel = 0;
+
         private ApiHandlerFabric _apiHandlerFabric;
 
         // Constructor
@@ -30,40 +49,59 @@ namespace Rocket.WP8
             InitializeComponent();
 
             Loaded += OnLoaded;
-
-            // Sample code to localize the ApplicationBar
-            //BuildLocalizedApplicationBar();
         }
 
+        #region INITIALIZATION
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
             Map.Center = new GeoCoordinate(55.751667, 37.617778);
             Map.ZoomLevel = 13;
 
             ShowMyLocation();
-            ShowPins();
+            LoadPins();
         }
 
-        // Sample code for building a localized ApplicationBar
-        //private void BuildLocalizedApplicationBar()
-        //{
-        //    // Set the page's ApplicationBar to a new instance of ApplicationBar.
-        //    ApplicationBar = new ApplicationBar();
-
-        //    // Create a new button and set the text value to the localized string from AppResources.
-        //    ApplicationBarIconButton appBarButton = new ApplicationBarIconButton(new Uri("/Assets/AppBar/appbar.add.rest.png", UriKind.Relative));
-        //    appBarButton.Text = AppResources.AppBarButtonText;
-        //    ApplicationBar.Buttons.Add(appBarButton);
-
-        //    // Create a new menu item with the localized string from AppResources.
-        //    ApplicationBarMenuItem appBarMenuItem = new ApplicationBarMenuItem(AppResources.AppBarMenuItemText);
-        //    ApplicationBar.MenuItems.Add(appBarMenuItem);
-        //}
-        private void Map_OnZoomLevelChanged(object sender, MapZoomLevelChangedEventArgs e)
+        private async void ShowMyLocation()
         {
-            Map.LandmarksEnabled = (Map.ZoomLevel > 17);
-            Debug.WriteLine("ZoomLevel: {0}", Map.ZoomLevel);
+            ShowMeButton.Visibility = Visibility.Collapsed;
+            var locator = new Geolocator();
+            var coordinate = await locator.GetGeopositionAsync();
+
+            ShowMeButton.Visibility = Visibility.Visible;
+            _position = CoordinateConverter.ConvertGeocoordinate(coordinate.Coordinate);
+            Map.SetView(_position, Map.ZoomLevel);
+
+            var myPos = new Image { Source = new BitmapImage(new Uri("Assets/pin_me.png", UriKind.Relative)) };
+
+            var myLocationOverlay = new MapOverlay
+            {
+                Content = myPos,
+                PositionOrigin = new Point(0.5, 0.5),
+                GeoCoordinate = _position
+            };
+
+            _locationLayer = new MapLayer { myLocationOverlay };
+            Map.Layers.Add(_locationLayer);
         }
+
+        private async void LoadPins()
+        {
+            _pinsLayer = new MapLayer();
+            Map.Layers.Add(_pinsLayer);
+
+            _apiHandlerFabric = new ApiHandlerFabric();
+            var getter = _apiHandlerFabric.CashinPointsGetter();
+            var points = await getter.GetPointsAsync();
+
+            _clusterizablePoints = points.Where(i => i.Type.Equals("mkb")).ToList();
+            _permanentPoints = points.Where(i => !i.Type.Equals("mkb")).ToList();
+
+            PreparePoints();
+        }
+
+        #endregion
+
+        #region MAP CONTROLS
 
         private void ZoomIn(object sender, GestureEventArgs e)
         {
@@ -78,105 +116,97 @@ namespace Rocket.WP8
             Map.SetView(_position, Map.ZoomLevel);
         }
 
-        private async void ShowMyLocation()
+        #endregion
+
+        #region MAP EVENTS
+
+        private void Map_OnZoomLevelChanged(object sender, MapZoomLevelChangedEventArgs e)
         {
-            ShowMeButton.Visibility = Visibility.Collapsed;
-            var locator = new Geolocator();
-            var coordinate = await locator.GetGeopositionAsync();
-
-            ShowMeButton.Visibility = Visibility.Visible;
-            _position = CoordinateConverter.ConvertGeocoordinate(coordinate.Coordinate);
-            Map.SetView(_position, Map.ZoomLevel);
-
-            var myPos = new Image {Source = new BitmapImage(new Uri("Assets/pin_me.png", UriKind.Relative))};
-
-            var myLocationOverlay = new MapOverlay
+            var zoomLevel = (int) Math.Floor(Map.ZoomLevel);
+            if (_currentZoomLevel != zoomLevel)
             {
-                Content = myPos,
-                PositionOrigin = new Point(0.5, 0.5),
-                GeoCoordinate = _position
-            };
+                _currentZoomLevel = zoomLevel;
 
-            _locationLayer = new MapLayer { myLocationOverlay };
-            Map.Layers.Add(_locationLayer);
+                RemoveAllPointsFromMap();
+                PreparePoints();
+
+                Map.LandmarksEnabled = (zoomLevel >= 17);
+            }
+
+            Debug.WriteLine("ZoomLevel: {0}", Map.ZoomLevel);
         }
 
-        private async void ShowPins()
+        private void Map_OnCenterChanged(object sender, MapCenterChangedEventArgs e)
         {
-            _pinsLayer = new MapLayer();
-            Map.Layers.Add(_pinsLayer);
-
-            _apiHandlerFabric = new ApiHandlerFabric();
-            var getter = _apiHandlerFabric.CashinPointsGetter();
-            var points = await getter.GetPointsAsync();
-
-            var mkb = points.Where(i => i.Type.Equals("mkb")).ToList();
-            var ors = points.Where(i => i.Type.Equals("ors")).ToList();
-            var other = points.Where(i => !i.Type.Equals("mkb")).ToList();
-
-            _pointsToDisplay = ors;
             UpdatePointsInView();
-
-            //foreach (var point in ors)
-            //{
-            //    var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
-            //    var pinImage = new Image { Source = new BitmapImage(new Uri(pinImages[point.Type] ?? "Assets/pin_ic.png", UriKind.Relative)) };
-
-            //    var pinOverlay = new MapOverlay
-            //    {
-            //        Content = pinImage,
-            //        PositionOrigin = new Point(0, 1),
-            //        GeoCoordinate = pinPosition
-            //    };
-
-            //    _pinsLayer.Add(pinOverlay);
-            //}
-
-            //var geotools = new GeoTools();
-            //var clusters = geotools.ClusterizePoints(ors.OfType<IGeoPoint>().ToList(), 50);
-
-            //foreach (var point in clusters.Points)
-            //{
-            //    var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
-            //    var pinImage = new Image { Source = new BitmapImage(new Uri(pinImages["ors"] ?? "Assets/pin_ic.png", UriKind.Relative)) };
-
-            //    var pinOverlay = new MapOverlay
-            //    {
-            //        Content = pinImage,
-            //        PositionOrigin = new Point(0, 1),
-            //        GeoCoordinate = pinPosition
-            //    };
-
-            //    _pinsLayer.Add(pinOverlay);
-            //}
-
         }
 
-        private readonly List<CashinPoint> _pointsOnMap = new List<CashinPoint>();
-        private List<CashinPoint> _pointsToDisplay;
-        private readonly Dictionary<CashinPoint, MapOverlay> _pointOverlays = new Dictionary<CashinPoint, MapOverlay>();
+        #endregion
 
-        private readonly Dictionary<string, string> _pinImages = new Dictionary<string, string>
+        #region POINTS ROUTINES
+
+        private void PreparePoints()
+        {
+            if (_permanentPoints == null || _clusterizablePoints == null) return;
+
+            const int maxLevel = 14;
+            const int minLevel = 6;
+
+            var zoomLevel = Math.Max(Math.Min(_currentZoomLevel, maxLevel), minLevel);
+
+            if (!_zoomClusters.ContainsKey(zoomLevel))
             {
-                {"mkb", "Assets/pin_mkb.png"},
-                {"ors", "Assets/pin_opc.png"},
-                {"intercommerz_office", "Assets/pin_icb.png"},
-                {"intercommerz_atm", "Assets/pin_ic.png"}
-            };
+                var ts = DateTime.Now;
+
+                if (zoomLevel < maxLevel)
+                {
+                    var dist = 20*(1 << (14 - zoomLevel));
+                    _zoomClusters[zoomLevel] = GeoTools.ClusterizePoints(_clusterizablePoints, dist).Concat(_permanentPoints);
+                }
+                else
+                {
+                    _zoomClusters[zoomLevel] = _clusterizablePoints.Concat(_permanentPoints);
+                }
+
+
+
+                //var dist = 20;
+                //_zoomClusters[14] = mkb;
+                //_zoomClusters[13] = GeoTools.ClusterizePoints(mkb, dist).Points;
+                //for (var i = 12; i >= 6; i--)
+                //{
+                //    dist *= 2;
+                //    _zoomClusters[i] = GeoTools.ClusterizePoints(_zoomClusters[i + 2], dist).Points;
+                //}
+
+                var dt = DateTime.Now - ts;
+                Debug.WriteLine("Clasterization Time: {0}", dt.TotalSeconds);
+            }
+
+            _pointsToDisplay = _zoomClusters[zoomLevel];
+            UpdatePointsInView();
+        }
+
+        private void RemoveAllPointsFromMap()
+        {
+            foreach (var point in _pointsOnMap.ToList())
+            {
+                _pinsLayer.Remove(_pointOverlays[point]);
+                _pointOverlays.Remove(point);
+                _pointsOnMap.Remove(point);
+            }
+        }
+
 
         public void UpdatePointsInView()
         {
             if (_pointsToDisplay == null) return;
 
 
+            var topLeft = Map.ConvertViewportPointToGeoCoordinate(new Point(-48, 0));
+            var bottomRight = Map.ConvertViewportPointToGeoCoordinate(new Point(Map.ActualWidth, Map.ActualHeight + 64));
 
-            var pointsCopy = _pointsOnMap.ToList();
-
-            var topLeft = Map.ConvertViewportPointToGeoCoordinate(new Point(0, 0));
-            var bottomRight = Map.ConvertViewportPointToGeoCoordinate(new Point(Map.ActualWidth, Map.ActualHeight));
-
-
-            foreach (var point in pointsCopy)
+            foreach (var point in _pointsOnMap.ToList())
             {
                 if (!PointInBox(point, topLeft, bottomRight))
                 {
@@ -194,7 +224,7 @@ namespace Rocket.WP8
                 if (PointInBox(point, topLeft, bottomRight))
                 {
                     var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
-                    var pinImage = new Image { Source = new BitmapImage(new Uri(_pinImages["ors"] ?? "Assets/pin_ic.png", UriKind.Relative)) };
+                    var pinImage = new Image { Source = new BitmapImage(new Uri(_pinImages[point.Type] ?? "Assets/pin_ic.png", UriKind.Relative)) };
 
                     var pinOverlay = new MapOverlay
                     {
@@ -220,11 +250,8 @@ namespace Rocket.WP8
                    (point.Lon <= rightBottomCorner.Longitude);
         }
 
-        private void Map_OnCenterChanged(object sender, MapCenterChangedEventArgs e)
-        {
-            UpdatePointsInView();
-            //Debug.WriteLine("OnCenterChanged: {0}:{1}", Map.Center.Latitude, Map.Center.Longitude);
-        }
+        #endregion
+
     }
 
     public static class CoordinateConverter
