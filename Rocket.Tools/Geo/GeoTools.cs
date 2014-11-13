@@ -13,6 +13,7 @@ namespace Rocket.Tools.Geo
         static public IList<IGeoPoint> ClusterizePoints(IEnumerable<IGeoPoint> points, double radius)
         {
             var clusters = new List<GeoCluster>();
+            var radiusSqr = radius*radius;
 
             foreach (var point in points)
             {
@@ -20,8 +21,8 @@ namespace Rocket.Tools.Geo
 
                 foreach (var cluster in clusters)
                 {
-                    var dist = GeoDistance(point, cluster);
-                    if (dist > radius) continue;
+                    var dist = MapDistanceSqr(point, cluster);
+                    if (dist > radiusSqr) continue;
 
                     cluster.Points.Add(point);
                     added = true;
@@ -61,6 +62,12 @@ namespace Rocket.Tools.Geo
             var x = sl1 * sl2 + cl1 * cl2 * cdelta;
 
             return Math.Atan2(y, x) * EarthRadius;
+        }
+
+        static public double MapDistanceSqr(IGeoPoint point1, IGeoPoint point2)
+        {
+            return (point2.Lat - point1.Lat)*(point2.Lat - point1.Lat) +
+                   (point2.Lon - point1.Lon)*(point2.Lon - point1.Lon);
         }
 
         public static int GeoHashFloor(double lat, double lon)

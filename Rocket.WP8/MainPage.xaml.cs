@@ -1,24 +1,27 @@
-﻿using System.Diagnostics;
-using System.Globalization;
-using Microsoft.Phone.Controls;
+﻿using System.ComponentModel;
 using Microsoft.Phone.Maps.Controls;
 using Rocket.Api;
 using Rocket.Data;
+using Rocket.Tools.Geo;
 using System;
 using System.Collections.Generic;
 using System.Device.Location;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Windows.Devices.Geolocation;
-using Rocket.Tools.Geo;
 
 namespace Rocket.WP8
 {
     public partial class MainPage
     {
+        const int MaxClasterizationLevel = 14;
+        const int MinClasterizationLevel = 6;
+
         private GeoCoordinate _position;
         private MapLayer _locationLayer;
         private MapLayer _pinsLayer;
@@ -39,7 +42,10 @@ namespace Rocket.WP8
                 {"intercommerz_atm", "Assets/pin_ic.png"}
             };
 
-        private int _currentZoomLevel = 0;
+        private int _currentZoomLevel;
+
+        private Task _nextClusterizingTask;
+        private Task _prevClusterizingTask;
 
         private ApiHandlerFabric _apiHandlerFabric;
 
@@ -49,11 +55,24 @@ namespace Rocket.WP8
             InitializeComponent();
 
             Loaded += OnLoaded;
+            BackKeyPress += OnBackKeyPress;
+        }
+
+        private void OnBackKeyPress(object sender, CancelEventArgs cancelEventArgs)
+        {
+            if (InfoCardGrid.Visibility == Visibility.Visible)
+            {
+                SelectedPoint = null;
+                VisualStateManager.GoToState(this, "InfoCardsClosed", true);
+                cancelEventArgs.Cancel = true;
+            }
         }
 
         #region INITIALIZATION
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
+            //VisualStateManager.GoToState(this, "InfoCardsClosed", true);
+
             Map.Center = new GeoCoordinate(55.751667, 37.617778);
             Map.ZoomLevel = 13;
 
@@ -120,14 +139,18 @@ namespace Rocket.WP8
 
         #region MAP EVENTS
 
-        private void Map_OnZoomLevelChanged(object sender, MapZoomLevelChangedEventArgs e)
+        private async void Map_OnZoomLevelChanged(object sender, MapZoomLevelChangedEventArgs e)
         {
             var zoomLevel = (int) Math.Floor(Map.ZoomLevel);
             if (_currentZoomLevel != zoomLevel)
             {
+                if ((_currentZoomLevel > zoomLevel) && (_prevClusterizingTask != null))
+                    await _prevClusterizingTask;
+                if ((_currentZoomLevel < zoomLevel) && (_nextClusterizingTask != null))
+                    await _nextClusterizingTask;
+
                 _currentZoomLevel = zoomLevel;
 
-                RemoveAllPointsFromMap();
                 PreparePoints();
 
                 Map.LandmarksEnabled = (zoomLevel >= 17);
@@ -145,46 +168,42 @@ namespace Rocket.WP8
 
         #region POINTS ROUTINES
 
-        private void PreparePoints()
+        private async void PreparePoints()
         {
             if (_permanentPoints == null || _clusterizablePoints == null) return;
 
-            const int maxLevel = 14;
-            const int minLevel = 6;
-
-            var zoomLevel = Math.Max(Math.Min(_currentZoomLevel, maxLevel), minLevel);
+            var zoomLevel = Math.Max(Math.Min(_currentZoomLevel, MaxClasterizationLevel), MinClasterizationLevel);
 
             if (!_zoomClusters.ContainsKey(zoomLevel))
             {
-                var ts = DateTime.Now;
+                await Task.Run(() => PrepareZoomLevel(zoomLevel));
+            }
+            _pointsToDisplay = _zoomClusters[zoomLevel];
+            RemoveAllPointsFromMap();
+            UpdatePointsInView();
 
-                if (zoomLevel < maxLevel)
-                {
-                    var dist = 20*(1 << (14 - zoomLevel));
-                    _zoomClusters[zoomLevel] = GeoTools.ClusterizePoints(_clusterizablePoints, dist).Concat(_permanentPoints);
-                }
-                else
-                {
-                    _zoomClusters[zoomLevel] = _clusterizablePoints.Concat(_permanentPoints);
-                }
+            if (!_zoomClusters.ContainsKey(zoomLevel + 1))
+                _nextClusterizingTask = Task.Run(() => PrepareZoomLevel(zoomLevel + 1));
+            if (!_zoomClusters.ContainsKey(zoomLevel - 1))
+                _prevClusterizingTask = Task.Run(() => PrepareZoomLevel(zoomLevel - 1));
+        }
 
+        private void PrepareZoomLevel(int zoomLevel)
+        {
+            var ts = DateTime.Now;
 
-
-                //var dist = 20;
-                //_zoomClusters[14] = mkb;
-                //_zoomClusters[13] = GeoTools.ClusterizePoints(mkb, dist).Points;
-                //for (var i = 12; i >= 6; i--)
-                //{
-                //    dist *= 2;
-                //    _zoomClusters[i] = GeoTools.ClusterizePoints(_zoomClusters[i + 2], dist).Points;
-                //}
-
-                var dt = DateTime.Now - ts;
-                Debug.WriteLine("Clasterization Time: {0}", dt.TotalSeconds);
+            if (zoomLevel < MaxClasterizationLevel)
+            {
+                var dist = 0.005 * (1 << (MaxClasterizationLevel - zoomLevel));
+                _zoomClusters[zoomLevel] = GeoTools.ClusterizePoints(_clusterizablePoints, dist).Concat(_permanentPoints).ToList();
+            }
+            else
+            {
+                _zoomClusters[zoomLevel] = _clusterizablePoints.Concat(_permanentPoints).ToList();
             }
 
-            _pointsToDisplay = _zoomClusters[zoomLevel];
-            UpdatePointsInView();
+            var dt = DateTime.Now - ts;
+            Debug.WriteLine("Clasterization Time: {0} {1}/{2}", dt.TotalSeconds, _zoomClusters[zoomLevel].Count() - _permanentPoints.Count(), _clusterizablePoints.Count());
         }
 
         private void RemoveAllPointsFromMap()
@@ -213,7 +232,6 @@ namespace Rocket.WP8
                     _pinsLayer.Remove(_pointOverlays[point]);
                     _pointOverlays.Remove(point);
                     _pointsOnMap.Remove(point);
-                    //Debug.WriteLine("pinOverlay Removed {0}", _pointsOnMap.Count);
                 }
             }
 
@@ -224,7 +242,13 @@ namespace Rocket.WP8
                 if (PointInBox(point, topLeft, bottomRight))
                 {
                     var pinPosition = new GeoCoordinate(point.Lat, point.Lon);
-                    var pinImage = new Image { Source = new BitmapImage(new Uri(_pinImages[point.Type] ?? "Assets/pin_ic.png", UriKind.Relative)) };
+                    var pinImage = new Image
+                    {
+                        Source = new BitmapImage(new Uri(_pinImages[point.Type] ?? "Assets/pin_ic.png", UriKind.Relative)), 
+                        Tag = point,
+                        Opacity = ((_selectedPoint != null) && (_selectedPoint != point)) ? 0.3 : 1.0
+                    };
+                    pinImage.Tap += PinImageOnTap;
 
                     var pinOverlay = new MapOverlay
                     {
@@ -236,10 +260,35 @@ namespace Rocket.WP8
                     _pinsLayer.Add(pinOverlay);
                     _pointsOnMap.Add(point);
                     _pointOverlays[point] = pinOverlay;
-                    //Debug.WriteLine("pinOverlay Added {0}", _pointsOnMap.Count);
                 }
             }
         }
+
+        private void PinImageOnTap(object sender, GestureEventArgs gestureEventArgs)
+        {
+            if (!(sender is FrameworkElement)) return;
+
+            ShowPointInfo((sender as FrameworkElement).Tag as IGeoPoint);
+        }
+
+        private void ShowPointInfo(IGeoPoint point)
+        {
+            if (point is CashinPoint)
+            {
+
+                var cachinPoint = (point as CashinPoint);
+                SelectedPoint = point;
+                Map.SetView(new GeoCoordinate(cachinPoint.Lat, cachinPoint.Lon), Math.Max(Map.ZoomLevel, 16));
+
+                VisualStateManager.GoToState(this, "InfoCardOpened", true);
+            }
+            else if (point is GeoCluster)
+            {
+                var cluster = (point as GeoCluster);
+                Map.SetView(new GeoCoordinate(cluster.Lat, cluster.Lon), Map.ZoomLevel + 1);
+            }
+        }
+
 
         private static bool PointInBox(IGeoPoint point, GeoCoordinate leftTopCorner, GeoCoordinate rightBottomCorner)
         {
@@ -252,6 +301,65 @@ namespace Rocket.WP8
 
         #endregion
 
+        #region SELECTED POINT 
+
+        private IGeoPoint _selectedPoint;
+        public IGeoPoint SelectedPoint
+        {
+            get { return _selectedPoint; }
+            set
+            {
+                if (_selectedPoint != null)
+                    SetPointOpacity(_selectedPoint, 0.3);
+
+                _selectedPoint = value;
+
+                if (_selectedPoint != null)
+                {
+                    SetPointOpacity(_selectedPoint, 1.0);
+                    TransporizePoints(_selectedPoint);
+                }
+                else
+                {
+                    UntransporizePoints();
+                }
+            }
+
+            
+        }
+
+        private void TransporizePoints(IGeoPoint except)
+        {
+            foreach (var point in _pointsOnMap.ToList())
+            {
+                if (point == except) continue;
+
+                SetPointOpacity(point, 0.3);
+            }
+        }
+
+        private void UntransporizePoints()
+        {
+            foreach (var point in _pointsOnMap.ToList())
+            {
+                SetPointOpacity(point, 1.0);
+            }
+        }
+
+        private void SetPointOpacity(IGeoPoint point, double opacity)
+        {
+            if (!_pointOverlays.ContainsKey(point)) return;
+
+            var overlay = _pointOverlays[point];
+            if (overlay == null) return;
+
+            var element = overlay.Content as FrameworkElement;
+            if (element == null) return;
+
+            element.Opacity = opacity;
+        }
+
+        #endregion
     }
 
     public static class CoordinateConverter
