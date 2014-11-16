@@ -1,7 +1,7 @@
 ﻿
 namespace Rocket.Api
 {
-    public class ApiHandlerFabric
+    public class ApiHandlerFabric : IApiHandlerFabric
     {
         public CashinPointsGetter CashinPointsGetter()
         {

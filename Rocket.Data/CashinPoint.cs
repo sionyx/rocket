@@ -12,7 +12,7 @@ namespace Rocket.Data
         public bool Usd { get; set; }
         public bool Eur { get; set; }
         public bool Hidden { get; set; }
-        public string Hourse { get; set; }
+        public string Hours { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
 

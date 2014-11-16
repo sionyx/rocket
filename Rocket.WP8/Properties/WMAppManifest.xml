@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
   <DefaultLanguage xmlns="" code="en-US" />
-  <App xmlns="" ProductID="{fb407cdb-4116-43b6-91a8-a3d44c97a7ab}" Title="Rocket.WP8" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Rocket.WP8 author" Description="Sample description" Publisher="Rocket.WP8" PublisherID="{22712351-5656-4d4e-ad8f-2067fe98d693}">
+  <AppExtra AppPlatformVersion="8.0" xmlns="">
+    <Extra Name="SDOptOut" />
+  </AppExtra>
+  <App xmlns="" ProductID="{fb407cdb-4116-43b6-91a8-a3d44c97a7ab}" Title="Rocket" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Rocket.WP8 author" Description="Sample description" Publisher="Rocket" PublisherID="{22712351-5656-4d4e-ad8f-2067fe98d693}">
     <IconPath IsRelative="true" IsResource="false">Assets\ApplicationIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />
@@ -21,7 +24,7 @@
           <SmallImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileSmall.png</SmallImageURI>
           <Count>0</Count>
           <BackgroundImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileMedium.png</BackgroundImageURI>
-          <Title>Rocket.WP8</Title>
+          <Title>Rocket</Title>
           <BackContent>
           </BackContent>
           <BackBackgroundImageURI>
