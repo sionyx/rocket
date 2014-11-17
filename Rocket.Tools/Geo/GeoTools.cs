@@ -50,11 +50,15 @@ namespace Rocket.Tools.Geo
 
         static public double GeoDistance(IGeoPoint point1, IGeoPoint point2)
         {
-            var cl1 = Math.Cos(point1.Lat);
-            var cl2 = Math.Cos(point2.Lat);
-            var sl1 = Math.Sin(point1.Lat);
-            var sl2 = Math.Sin(point2.Lat);
-            var delta = point2.Lon - point1.Lon;
+            return GeoDistance(point1.Lat, point1.Lon, point2.Lat, point2.Lon);
+        }
+        static public double GeoDistance(double la1, double lo1, double la2, double lo2)
+        {
+            var cl1 = Math.Cos(la1);
+            var cl2 = Math.Cos(la2);
+            var sl1 = Math.Sin(la1);
+            var sl2 = Math.Sin(la2);
+            var delta = lo2 - lo1;
             var cdelta = Math.Cos(delta);
             var sdelta = Math.Sin(delta);
 

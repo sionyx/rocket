@@ -22,9 +22,9 @@ namespace Rocket.Controls
 
         private const double PointTransparensy = 0.3;
 
-        private GeoCoordinate _position;
         private MapLayer _locationLayer;
         private MapLayer _pinsLayer;
+        private MapOverlay _locationOverlay;
 
         private int _currentZoomLevel;
 
@@ -175,12 +175,99 @@ namespace Rocket.Controls
         }
         #endregion
 
+        #region DEPENDENCY PROPERTY CurrentLocation
+
+        public static DependencyProperty CurrentLocationProperty =
+            DependencyProperty.Register("CurrentLocation", typeof(GeoCoordinate), typeof(CashinMap),
+                    new PropertyMetadata(null, CurrentLocationChanged));
+
+        private GeoCoordinate _currentLocation;
+        public GeoCoordinate CurrentLocation
+        {
+            get { return (GeoCoordinate)GetValue(CurrentLocationProperty); }
+            set
+            {
+                _currentLocation = value;
+                SetValue(CurrentLocationProperty, value);
+                SetCurrentLocation(value);
+            }
+        }
+
+        private static void CurrentLocationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var map = (CashinMap)d;
+            map.SetCurrentLocation((GeoCoordinate)e.NewValue);
+        }
+
+        private void SetCurrentLocation(GeoCoordinate location)
+        {
+            _currentLocation = location;
+            Map.SetView(_currentLocation, Map.ZoomLevel);
+
+            if (_locationOverlay == null)
+            {
+                var myPos = new Image { Source = new BitmapImage(new Uri("/Assets/pin_me.png", UriKind.Relative)) };
+
+                _locationOverlay = new MapOverlay
+                {
+                    Content = myPos,
+                    PositionOrigin = new Point(0.5, 0.5),
+                    GeoCoordinate = _currentLocation
+                };
+
+                _locationLayer.Add(_locationOverlay);
+            }
+            else
+            {
+                _locationOverlay.GeoCoordinate = _currentLocation;
+            }
+        }
+        #endregion
+
+        #region DEPENDENCY PROPERTY LocationResolved
+
+        public static DependencyProperty LocationResolvedProperty =
+            DependencyProperty.Register("LocationResolved", typeof (bool), typeof (CashinMap), 
+                    new PropertyMetadata(false, LocationResolvedChanged));
+
+        public bool LocationResolved
+        {
+            get { return (bool)GetValue(LocationResolvedProperty); }
+            set
+            {
+                SetValue(LocationResolvedProperty, value);
+                SetLocationResolved(value);
+            }
+        }
+
+        private static void LocationResolvedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var map = (CashinMap)d;
+            map.SetLocationResolved((bool)e.NewValue);
+        }
+
+        private void SetLocationResolved(bool isLocationResolved)
+        {
+            ShowMeButton.Visibility = isLocationResolved
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+            if (_locationOverlay == null) return;
+
+            if (isLocationResolved && !_locationLayer.Contains(_locationOverlay))
+                _locationLayer.Add(_locationOverlay);
+            else if (!isLocationResolved && _locationLayer.Contains(_locationOverlay))
+                _locationLayer.Remove(_locationOverlay);
+        }
+        #endregion
+
         #endregion
 
 
         public CashinMap()
         {
             InitializeComponent();
+            PrepareLayers();
             Loaded += OnLoaded;
         }
 
@@ -188,11 +275,9 @@ namespace Rocket.Controls
 
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
-            Map.Center = new GeoCoordinate(55.751667, 37.617778);
+            _currentLocation = new GeoCoordinate(55.751667, 37.617778);
+            Map.Center = _currentLocation;
             Map.ZoomLevel = 13;
-
-            PrepareLayers();
-            ShowMyLocation();
         }
 
         private void PrepareLayers()
@@ -202,28 +287,6 @@ namespace Rocket.Controls
 
             _locationLayer = new MapLayer();
             Map.Layers.Add(_locationLayer);
-        }
-
-        private async void ShowMyLocation()
-        {
-            ShowMeButton.Visibility = Visibility.Collapsed;
-            var locator = new Geolocator();
-            var coordinate = await locator.GetGeopositionAsync();
-
-            ShowMeButton.Visibility = Visibility.Visible;
-            _position = CoordinateConverter.ConvertGeocoordinate(coordinate.Coordinate);
-            Map.SetView(_position, Map.ZoomLevel);
-
-            var myPos = new Image { Source = new BitmapImage(new Uri("/Assets/pin_me.png", UriKind.Relative)) };
-
-            var myLocationOverlay = new MapOverlay
-            {
-                Content = myPos,
-                PositionOrigin = new Point(0.5, 0.5),
-                GeoCoordinate = _position
-            };
-
-            _locationLayer.Add(myLocationOverlay);
         }
 
         #endregion
@@ -434,7 +497,7 @@ namespace Rocket.Controls
         }
         private void ShowMe(object sender, GestureEventArgs e)
         {
-            Map.SetView(_position, Map.ZoomLevel);
+            Map.SetView(_currentLocation, Map.ZoomLevel);
         }
 
 

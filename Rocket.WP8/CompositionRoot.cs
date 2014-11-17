@@ -7,6 +7,7 @@ namespace Rocket
     {
         private readonly IApiHandlerFabric _apiHandlerFabric;
         private ICashinMapViewModel _cashinMapViewModel;
+        private IGeoLocator _geoLocator;
 
         public CompositionRoot()
         {
@@ -16,6 +17,11 @@ namespace Rocket
         public ICashinMapViewModel CashinMapViewModel
         {
             get { return _cashinMapViewModel ?? (_cashinMapViewModel = new CashinMapViewModel(_apiHandlerFabric)); }
+        }
+
+        public IGeoLocator GeoLocator
+        {
+            get { return _geoLocator ?? (_geoLocator = new GeoLocator()); }
         }
     }
 }

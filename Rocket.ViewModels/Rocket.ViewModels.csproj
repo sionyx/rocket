@@ -85,7 +85,9 @@
   <ItemGroup>
     <Compile Include="Implementations\BindableBase.cs" />
     <Compile Include="Implementations\CashinMapViewModel.cs" />
+    <Compile Include="Implementations\GeoLocator.cs" />
     <Compile Include="Intefaces\ICashinMapViewModel.cs" />
+    <Compile Include="Intefaces\IGeoLocator.cs" />
     <Compile Include="Intefaces\IViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Implementations\ViewModelBase.cs" />

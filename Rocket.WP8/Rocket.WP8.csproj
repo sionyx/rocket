@@ -98,6 +98,7 @@
     <Compile Include="Controls\CashinMap.xaml.cs">
       <DependentUpon>CashinMap.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converter\RevertBooleanConverter.cs" />
     <Compile Include="LocalizedStrings.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>

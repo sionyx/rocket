@@ -10,7 +10,8 @@
     xmlns:ec="clr-namespace:Microsoft.Expression.Interactivity.Core;assembly=Microsoft.Expression.Interactions"
     xmlns:rocket="clr-namespace:Rocket.Controls"
 	xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
-    mc:Ignorable="d"
+	xmlns:converter="clr-namespace:Rocket.Converter"
+	mc:Ignorable="d"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
@@ -35,6 +36,8 @@
         <Style x:Key="InfoAddressTitle" BasedOn="{StaticResource InfoDefStyle}" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource PhoneFontFamilyBold}" />
         </Style>
+        
+        <converter:RevertBooleanConverter x:Key="RevertBooleanConverter" />
     </phone:PhoneApplicationPage.Resources>
 
     <shell:SystemTray.ProgressIndicator>
@@ -85,7 +88,9 @@
             <rocket:CashinMap x:Name="CashinMap" 
                               Points="{Binding CashinPoints}" 
                               SelectedPoint="{Binding SelectedPoint, Mode=TwoWay}"
-                              ClasterizationCondition="{Binding ClasterizationCondition}"/>
+                              ClasterizationCondition="{Binding ClasterizationCondition}"
+                              CurrentLocation="{Binding Path=GeoLocator.CurrentLocation, Source={StaticResource CompositionRoot}}" 
+                              LocationResolved="{Binding Path=GeoLocator.InProgress, Source={StaticResource CompositionRoot}, Converter={StaticResource RevertBooleanConverter}}" />
                         
             <!--<maps:Map x:Name="Map" ZoomLevelChanged="Map_OnZoomLevelChanged" CenterChanged="Map_OnCenterChanged" />
 
