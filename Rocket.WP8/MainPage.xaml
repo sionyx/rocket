@@ -84,7 +84,8 @@
 
             <rocket:CashinMap x:Name="CashinMap" 
                               Points="{Binding CashinPoints}" 
-                              SelectedPoint="{Binding SelectedPoint, Mode=TwoWay}"/>
+                              SelectedPoint="{Binding SelectedPoint, Mode=TwoWay}"
+                              ClasterizationCondition="{Binding ClasterizationCondition}"/>
                         
             <!--<maps:Map x:Name="Map" ZoomLevelChanged="Map_OnZoomLevelChanged" CenterChanged="Map_OnCenterChanged" />
 

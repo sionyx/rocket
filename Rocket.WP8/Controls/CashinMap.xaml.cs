@@ -34,6 +34,8 @@ namespace Rocket.Controls
         private IEnumerable<IGeoPoint> _permanentPoints;
         private IEnumerable<IGeoPoint> _clusterizablePoints;
 
+        private Func<CashinPoint, bool> _clasterizationCondition;
+
         private readonly Dictionary<int, IEnumerable<IGeoPoint>> _zoomClusters = new Dictionary<int, IEnumerable<IGeoPoint>>();
         private readonly List<IGeoPoint> _pointsOnMap = new List<IGeoPoint>();
         private IEnumerable<IGeoPoint> _pointsToDisplay;
@@ -56,6 +58,8 @@ namespace Rocket.Controls
         public static DependencyProperty PointsProperty =
             DependencyProperty.Register("Points", typeof(List<CashinPoint>), typeof(CashinMap),
                     new PropertyMetadata(null, PointsChanged));
+
+        private List<CashinPoint> _points;
         public List<CashinPoint> Points
         {
             get { return (List<CashinPoint>)GetValue(PointsProperty); }
@@ -74,8 +78,26 @@ namespace Rocket.Controls
 
         private void SetPoints(List<CashinPoint> points)
         {
-            _clusterizablePoints = points.Where(i => i.Type.Equals("mkb")).ToList();
-            _permanentPoints = points.Where(i => !i.Type.Equals("mkb")).ToList();
+            _points = points;
+
+            if (_points == null)
+            {
+                _clusterizablePoints = null;
+                _permanentPoints = null;
+                return;
+            }
+
+            _zoomClusters.Clear();
+
+            if (_clasterizationCondition != null)
+            {
+                _clusterizablePoints = points.Where(p => _clasterizationCondition(p)).ToList();
+                _permanentPoints = points.Where(p => !_clasterizationCondition(p)).ToList();
+            }
+            else
+            {
+                _permanentPoints = points;
+            }
 
             PreparePoints();
         }
@@ -124,6 +146,34 @@ namespace Rocket.Controls
         }
         #endregion
 
+        #region DEPENDENCY PROPERTY ClasterizationCondition
+
+        public static DependencyProperty ClasterizationConditionProperty =
+            DependencyProperty.Register("ClasterizationCondition", typeof(Func<CashinPoint, bool>), typeof(CashinMap),
+                    new PropertyMetadata(null, ClasterizationConditionChanged));
+
+        public Func<CashinPoint, bool> ClasterizationCondition
+        {
+            get { return (Func<CashinPoint, bool>)GetValue(ClasterizationConditionProperty); }
+            set
+            {
+                SetValue(ClasterizationConditionProperty, value);
+                SetClasterizationCondition(value);
+            }
+        }
+
+        private static void ClasterizationConditionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var map = (CashinMap)d;
+            map.SetClasterizationCondition((Func<CashinPoint, bool>)e.NewValue);
+        }
+
+        private void SetClasterizationCondition(Func<CashinPoint, bool> condition)
+        {
+            _clasterizationCondition = condition;
+            SetPoints(_points);
+        }
+        #endregion
 
         #endregion
 

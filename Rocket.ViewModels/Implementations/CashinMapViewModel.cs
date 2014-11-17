@@ -21,6 +21,8 @@ namespace Rocket.ViewModels
 
         private async void Load()
         {
+            ClasterizationCondition = point => point.Type.Equals("mkb");
+
             InProgress = true;
             ProgressText = "Загрузка точек...";
 
@@ -52,6 +54,17 @@ namespace Rocket.ViewModels
             {
                 _selectedPoint = value;
                 NotifyPropertyChanged("SelectedPoint");
+            }
+        }
+
+        private Func<CashinPoint, bool> _clasterizationCondition;
+        public Func<CashinPoint, bool> ClasterizationCondition
+        {
+            get { return _clasterizationCondition; }
+            private set
+            {
+                _clasterizationCondition = value;
+                NotifyPropertyChanged("ClasterizationCondition");
             }
         }
     }

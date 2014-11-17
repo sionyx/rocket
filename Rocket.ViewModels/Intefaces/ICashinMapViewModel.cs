@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Rocket.Data;
 
 namespace Rocket.ViewModels
@@ -7,6 +8,7 @@ namespace Rocket.ViewModels
     {
         List<CashinPoint> CashinPoints { get; }
         CashinPoint SelectedPoint { get; set; }
+        Func<CashinPoint, bool> ClasterizationCondition { get; } 
 
     }
 }
