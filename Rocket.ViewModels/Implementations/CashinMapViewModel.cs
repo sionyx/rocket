@@ -11,10 +11,12 @@ namespace Rocket.ViewModels
     public class CashinMapViewModel : ViewModelBase, ICashinMapViewModel
     {
         private readonly IApiHandlerFabric _apiHandlerFabric;
+        private readonly IGeoLocator _geoLocator;
 
-        public CashinMapViewModel(IApiHandlerFabric apiHandlerFabric)
+        public CashinMapViewModel(IApiHandlerFabric apiHandlerFabric, IGeoLocator geoLocator)
         {
             _apiHandlerFabric = apiHandlerFabric;
+            _geoLocator = geoLocator;
 
             Load();
         }
@@ -54,6 +56,8 @@ namespace Rocket.ViewModels
             {
                 _selectedPoint = value;
                 NotifyPropertyChanged("SelectedPoint");
+
+                DistanceToSelectedPoint = (_selectedPoint != null) ? _geoLocator.DistanceToPoint(_selectedPoint) : 0;
             }
         }
 
@@ -67,5 +71,18 @@ namespace Rocket.ViewModels
                 NotifyPropertyChanged("ClasterizationCondition");
             }
         }
+
+        private double _distanceToSelectedPoint;
+
+        public double DistanceToSelectedPoint
+        {
+            get { return _distanceToSelectedPoint; }
+            set
+            {
+                _distanceToSelectedPoint = value;
+                NotifyPropertyChanged("DistanceToSelectedPoint");
+            }
+        }
+
     }
 }

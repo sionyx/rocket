@@ -8,7 +8,7 @@ namespace Rocket.ViewModels
     {
         List<CashinPoint> CashinPoints { get; }
         CashinPoint SelectedPoint { get; set; }
-        Func<CashinPoint, bool> ClasterizationCondition { get; } 
-
+        Func<CashinPoint, bool> ClasterizationCondition { get; }
+        double DistanceToSelectedPoint { get; }
     }
 }

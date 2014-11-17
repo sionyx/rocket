@@ -7,8 +7,7 @@ namespace Rocket.Tools.Geo
 {
     public class GeoTools
     {
-        private const double EarthRadius = 6372.795d;
-        //private const double Distance = 1000d;
+        private const double EarthRadius = 6372795d;
 
         static public IList<IGeoPoint> ClusterizePoints(IEnumerable<IGeoPoint> points, double radius)
         {
@@ -54,6 +53,11 @@ namespace Rocket.Tools.Geo
         }
         static public double GeoDistance(double la1, double lo1, double la2, double lo2)
         {
+            la1 = la1 * Math.PI / 180;
+            lo1 = lo1 * Math.PI / 180;
+            la2 = la2 * Math.PI / 180;
+            lo2 = lo2 * Math.PI / 180; 
+
             var cl1 = Math.Cos(la1);
             var cl2 = Math.Cos(la2);
             var sl1 = Math.Sin(la1);

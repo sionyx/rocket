@@ -8,7 +8,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Windows.Devices.Geolocation;
 using Microsoft.Phone.Maps.Controls;
 using Rocket.Data;
 using Rocket.Tools.Geo;
@@ -45,8 +44,8 @@ namespace Rocket.Controls
             {
                 {"mkb", "/Assets/pin_mkb.png"},
                 {"ors", "/Assets/pin_opc.png"},
-                {"intercommerz_office", "/Assets/pin_icb.png"},
-                {"intercommerz_atm", "/Assets/pin_ic.png"}
+                {"intercommerz_office", "/Assets/pin_ic.png"},
+                {"intercommerz_atm", "/Assets/pin_icb.png"}
             };
 
 

@@ -36,8 +36,15 @@
         <Style x:Key="InfoAddressTitle" BasedOn="{StaticResource InfoDefStyle}" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource PhoneFontFamilyBold}" />
         </Style>
+
+        <Style x:Key="InfoDistance" BasedOn="{StaticResource InfoDefStyle}" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="DarkGray" />
+            <Setter Property="Margin" Value="12,20,24,0" />
+        </Style>
         
         <converter:RevertBooleanConverter x:Key="RevertBooleanConverter" />
+        <converter:MetersToDistanceConverter x:Key="MetersToDistanceConverter" />
+        <converter:CashinPointTypeToVisibilityConverter x:Key="TypeToVisibilityConverter" />
     </phone:PhoneApplicationPage.Resources>
 
     <shell:SystemTray.ProgressIndicator>
@@ -113,24 +120,80 @@
             </Grid>-->
         </Grid>
 
-        <Grid x:Name="InfoCardGrid" Grid.Row="1" Height="480" Visibility="Collapsed">
+
+        <Grid x:Name="InfoCardGrid" Grid.Row="1" Height="480" Visibility="Collapsed" Background="White" >
             <Grid.RenderTransform>
                 <TranslateTransform />
             </Grid.RenderTransform>
-            <Grid.Background>
-                <ImageBrush ImageSource="Assets/info_ic.png"></ImageBrush>
-            </Grid.Background>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Text="{Binding SelectedPoint.Name}" Style="{StaticResource InfoName}" />
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding SelectedPoint.Name}" Style="{StaticResource InfoName}" />
+                <TextBlock Grid.Column="1" Text="{Binding DistanceToSelectedPoint, Converter={StaticResource MetersToDistanceConverter}}" Style="{StaticResource InfoDistance}" />
+            </Grid>
+            
             <TextBlock Grid.Row="1" Text="{Binding SelectedPoint.Address}" Style="{StaticResource InfoDefStyle}" />
-            <TextBlock Grid.Row="2" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
-            <TextBlock Grid.Row="3" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+
+            <!-- intercommerz_atm -->
+            <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=intercommerz_atm}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
+                <TextBlock Grid.Row="1" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+                
+                <Image Grid.Row="3" Source="/Assets/info_ic.png" Width="250" Height="260" Stretch="UniformToFill" HorizontalAlignment="Center" /> 
+            </Grid>
+
+            <!-- ors -->
+            <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=ors}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="256" />
+                </Grid.ColumnDefinitions>
+                <Image Grid.Row="3" Grid.ColumnSpan="2" Source="/Assets/info_opc.png" Height="260" Stretch="UniformToFill" />
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Ищите банкомат с логотипом сети ОРС" Style="{StaticResource InfoDefStyle}" />
+            </Grid>
+
+            <!-- intercommerz_office -->
+            <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=intercommerz_office}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image Grid.Column="1" Grid.RowSpan="4" Source="/Assets/info_icb.png" Height="340" Stretch="UniformToFill" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="С паспортом и картой можно пополнить в кассе" Style="{StaticResource InfoDefStyle}" />
+            </Grid>
         </Grid>
 
         <!--<ScrollViewer Grid.Row="1" Height="480" Background="White">

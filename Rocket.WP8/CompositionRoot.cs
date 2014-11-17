@@ -16,7 +16,7 @@ namespace Rocket
 
         public ICashinMapViewModel CashinMapViewModel
         {
-            get { return _cashinMapViewModel ?? (_cashinMapViewModel = new CashinMapViewModel(_apiHandlerFabric)); }
+            get { return _cashinMapViewModel ?? (_cashinMapViewModel = new CashinMapViewModel(_apiHandlerFabric, GeoLocator)); }
         }
 
         public IGeoLocator GeoLocator
