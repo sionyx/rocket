@@ -98,6 +98,7 @@
     <Compile Include="Controls\CashinMap.xaml.cs">
       <DependentUpon>CashinMap.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converter\CashinPointTypeToObjectConverter.cs" />
     <Compile Include="Converter\CashinPointTypeToVisibilityConverter.cs" />
     <Compile Include="Converter\MetersToDistanceConverter.cs" />
     <Compile Include="Converter\RevertBooleanConverter.cs" />
@@ -127,6 +128,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Fonts\rouble.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml">

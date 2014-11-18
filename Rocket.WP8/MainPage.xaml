@@ -11,6 +11,8 @@
     xmlns:rocket="clr-namespace:Rocket.Controls"
 	xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
 	xmlns:converter="clr-namespace:Rocket.Converter"
+	xmlns:generic="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+	xmlns:system="clr-namespace:System;assembly=mscorlib"
 	mc:Ignorable="d"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
@@ -42,9 +44,58 @@
             <Setter Property="Margin" Value="12,20,24,0" />
         </Style>
         
+        <Style x:Key="MapControlButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="72" />
+            <Setter Property="Height" Value="72" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="MouseOver"/>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ContentPresenter" 
+                                                             Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
+                                                             To="4"
+                                                             Duration="0:0:0.0"/>
+                                            <DoubleAnimation Storyboard.TargetName="ContentPresenter" 
+                                                             Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.X)"
+                                                             To="4"
+                                                             Duration="0:0:0.0"/>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter x:Name="ContentPresenter" >
+                                <ContentPresenter.RenderTransform>
+                                    <TranslateTransform />
+                                </ContentPresenter.RenderTransform>
+                            </ContentPresenter>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
         <converter:RevertBooleanConverter x:Key="RevertBooleanConverter" />
         <converter:MetersToDistanceConverter x:Key="MetersToDistanceConverter" />
         <converter:CashinPointTypeToVisibilityConverter x:Key="TypeToVisibilityConverter" />
+        
+        <converter:CashinPointTypeToObjectConverter x:Key="TypeToScrollBarVisibilityConverter" >
+            <converter:CashinPointTypeToObjectConverter.DefaultObject>
+                <ScrollBarVisibility>Disabled</ScrollBarVisibility>
+            </converter:CashinPointTypeToObjectConverter.DefaultObject>
+            <converter:CashinPointTypeToObjectConverter.Objects>
+                <ScrollBarVisibility x:Key="mkb">Visible</ScrollBarVisibility>
+            </converter:CashinPointTypeToObjectConverter.Objects>
+        </converter:CashinPointTypeToObjectConverter>
+        
     </phone:PhoneApplicationPage.Resources>
 
     <shell:SystemTray.ProgressIndicator>
@@ -108,18 +159,18 @@
                 <Grid.RenderTransform>
                     <TranslateTransform />
                 </Grid.RenderTransform>
-                
-                <Button BorderThickness="0" Margin="0,0,24,96" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+
+                <Button Style="{StaticResource MapControlButtonStyle}" Margin="0,0,24,96" HorizontalAlignment="Right"
                         Command="{Binding Path=ZoomInCommand, ElementName=CashinMap}" >
                     <Image Source="Assets/but_zoom_in.png" Width="49" Height="49" />
                 </Button>
 
-                <Button BorderThickness="0" Margin="0,0,24,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                <Button Style="{StaticResource MapControlButtonStyle}" Margin="0,0,24,24" HorizontalAlignment="Right" 
                         Command="{Binding Path=ZoomOutCommand, ElementName=CashinMap}" >
                     <Image Source="Assets/but_zoom_out.png" Width="49" Height="49" />
                 </Button>
 
-                <Button BorderThickness="0" Margin="24,0,0,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Left" VerticalAlignment="Bottom" 
+                <Button Style="{StaticResource MapControlButtonStyle}" Margin="24,0,0,24" HorizontalAlignment="Left"
                         Command="{Binding Path=MoveToCurrentLocationCommand, ElementName=CashinMap}"
                         IsEnabled="{Binding Path=GeoLocator.InProgress, Source={StaticResource CompositionRoot}, Converter={StaticResource RevertBooleanConverter}}">
                     <Image Source="Assets/but_me.png" Width="49" Height="49" />
@@ -127,84 +178,131 @@
             </Grid>
         </Grid>
 
-
-        <Grid x:Name="InfoCardGrid" Grid.Row="1" Height="480" Visibility="Collapsed" Background="White" >
-            <Grid.RenderTransform>
+        <ScrollViewer x:Name="InfoCardPanel" Grid.Row="1" Height="480" Visibility="Collapsed" Background="White"
+                      VerticalScrollBarVisibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToScrollBarVisibilityConverter}}">
+            <ScrollViewer.RenderTransform>
                 <TranslateTransform />
-            </Grid.RenderTransform>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{Binding SelectedPoint.Name}" Style="{StaticResource InfoName}" />
-                <TextBlock Grid.Column="1" Text="{Binding DistanceToSelectedPoint, Converter={StaticResource MetersToDistanceConverter}}" Style="{StaticResource InfoDistance}" />
-            </Grid>
-            
-            <TextBlock Grid.Row="1" Text="{Binding SelectedPoint.Address}" Style="{StaticResource InfoDefStyle}" />
-
-            <!-- intercommerz_atm -->
-            <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=intercommerz_atm}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
-                <TextBlock Grid.Row="1" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+            </ScrollViewer.RenderTransform>
                 
-                <Image Grid.Row="3" Source="/Assets/info_ic.png" Width="250" Height="260" Stretch="UniformToFill" HorizontalAlignment="Center" /> 
-            </Grid>
-
-            <!-- ors -->
-            <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=ors}">
+            <Grid x:Name="InfoCardGrid"  >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="256" />
-                </Grid.ColumnDefinitions>
-                <Image Grid.Row="3" Grid.ColumnSpan="2" Source="/Assets/info_opc.png" Height="260" Stretch="UniformToFill" />
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding SelectedPoint.Name}" Style="{StaticResource InfoName}" />
+                    <TextBlock Grid.Column="1" Text="{Binding DistanceToSelectedPoint, Converter={StaticResource MetersToDistanceConverter}}" Style="{StaticResource InfoDistance}" />
+                </Grid>
+            
+                <TextBlock Grid.Row="1" Text="{Binding SelectedPoint.Address}" Style="{StaticResource InfoDefStyle}" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Ищите банкомат с логотипом сети ОРС" Style="{StaticResource InfoDefStyle}" />
+                <!-- intercommerz_atm -->
+                <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=intercommerz_atm}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
+                    <TextBlock Grid.Row="1" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+                
+                    <Image Grid.Row="3" Source="/Assets/info_ic.png" Width="250" Height="260" Stretch="UniformToFill" HorizontalAlignment="Center" /> 
+                </Grid>
+
+                <!-- ors -->
+                <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=ors}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="256" />
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Row="3" Grid.ColumnSpan="2" Source="/Assets/info_opc.png" Height="260" Stretch="UniformToFill" />
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Ищите банкомат с логотипом сети ОРС" Style="{StaticResource InfoDefStyle}" />
+                </Grid>
+
+                <!-- intercommerz_office -->
+                <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=intercommerz_office}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="1" Grid.RowSpan="4" Source="/Assets/info_icb.png" Height="340" Stretch="UniformToFill" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="С паспортом и картой можно пополнить в кассе" Style="{StaticResource InfoDefStyle}" />
+                </Grid>
+
+                <!-- mkb -->
+                <Grid Margin="0,0,0,24" Grid.Row="2"  Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=mkb}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="как пополнить счет?" Style="{StaticResource InfoAddressTitle}" />
+                    <TextBlock Grid.Row="1" Text="Найдите и нажмите кнопку «Рокетбанк» на экране терминала." Style="{StaticResource InfoDefStyle}" />
+                    <Image Grid.Row="2" Source="/Assets/info_mkb_1.png" Margin="0,24,0,0" />
+                    <TextBlock Grid.Row="3" Text="Вставьте карту Рокетбанка в терминал и введите пинкод. Теперь можно пополнять счет." Style="{StaticResource InfoDefStyle}" />
+                    <TextBlock Grid.Row="4" Text="Лимиты пополнения расположены ниже." Style="{StaticResource InfoDefStyle}" />
+                    <Image Grid.Row="5" Source="/Assets/info_mkb_2.png" Margin="0,24,0,0" />
+                    <TextBlock Grid.Row="6" Text="лимиты пополнения:" Style="{StaticResource InfoAddressTitle}" />
+                    <TextBlock Grid.Row="7" Style="{StaticResource InfoDefStyle}" >
+                        <Run Text="15 000" />
+                        <Run Text="i" FontFamily="/Fonts/rouble.ttf#ALS Rubl" />
+                        <Run Text="за операцию" />
+                    </TextBlock>
+                    <TextBlock Grid.Row="8" Style="{StaticResource InfoDefStyle}" >
+                        <Run Text="50 000" />
+                        <Run Text="i" FontFamily="/Fonts/rouble.ttf#ALS Rubl" />
+                        <Run Text="в день" />
+                    </TextBlock>
+                    <TextBlock Grid.Row="9" Text="8 операций в день" Style="{StaticResource InfoDefStyle}" />
+                    <TextBlock Grid.Row="10" Style="{StaticResource InfoDefStyle}" >
+                        <Run Text="до 100 000" />
+                        <Run Text="i" FontFamily="/Fonts/rouble.ttf#ALS Rubl" />
+                        <Run Text="за 4 дня" />
+                    </TextBlock>
+                    <TextBlock Grid.Row="11" Style="{StaticResource InfoDefStyle}" >
+                        <Run Text="480 000" />
+                        <Run Text="i" FontFamily="/Fonts/rouble.ttf#ALS Rubl" />
+                        <Run Text="в месяц" />
+                    </TextBlock>
+                </Grid>
             </Grid>
-
-            <!-- intercommerz_office -->
-            <Grid Grid.Row="2" Visibility="{Binding SelectedPoint.Type, Converter={StaticResource TypeToVisibilityConverter}, ConverterParameter=intercommerz_office}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Image Grid.Column="1" Grid.RowSpan="4" Source="/Assets/info_icb.png" Height="340" Stretch="UniformToFill" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
-
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Время работы" Style="{StaticResource InfoAddressTitle}" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedPoint.Hours}" Style="{StaticResource InfoDefStyle}" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="С паспортом и картой можно пополнить в кассе" Style="{StaticResource InfoDefStyle}" />
-            </Grid>
-        </Grid>
-
-        <!--<ScrollViewer Grid.Row="1" Height="480" Background="White">
-        </ScrollViewer>-->
+        </ScrollViewer>
 
         <!--Uncomment to see an alignment grid to help ensure your controls are
             aligned on common boundaries.  The image has a top margin of -32px to
@@ -225,22 +323,14 @@
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="InfoCardGrid" Storyboard.TargetProperty="Visibility">
                             <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Collapsed" />
                         </ObjectAnimationUsingKeyFrames>
-                        <!--<DoubleAnimation Storyboard.TargetName="InfoCardGrid" 
-                                         Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
-                                         To="480"
-                                         Duration="0:0:0.3"/>
-                        <DoubleAnimation Storyboard.TargetName="MapGrid" 
-                                         Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
-                                         To="0"
-                                         Duration="0:0:0.3"/>-->
                     </Storyboard>
                 </VisualState>
                 <VisualState x:Name="InfoCardOpened">
                     <Storyboard>
-                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="InfoCardGrid" Storyboard.TargetProperty="Visibility">
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="InfoCardPanel" Storyboard.TargetProperty="Visibility">
                             <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Visible" />
                         </ObjectAnimationUsingKeyFrames>
-                        <DoubleAnimation Storyboard.TargetName="InfoCardGrid" 
+                        <DoubleAnimation Storyboard.TargetName="InfoCardPanel" 
                                          Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
                                          From="480"
                                          To="0"
@@ -260,7 +350,7 @@
                 <VisualStateGroup.Transitions>
                     <VisualTransition From="InfoCardOpened" To="InfoCardsClosed">
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="InfoCardGrid" 
+                            <DoubleAnimation Storyboard.TargetName="InfoCardPanel" 
                                          Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
                                          To="480"
                                          Duration="0:0:0.3"/>
@@ -272,7 +362,7 @@
                                          Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
                                          To="0"
                                          Duration="0:0:0.3"/>
-                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="InfoCardGrid" Storyboard.TargetProperty="Visibility">
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="InfoCardPanel" Storyboard.TargetProperty="Visibility">
                                 <DiscreteObjectKeyFrame KeyTime="0:0:0.3" Value="Collapsed" />
                             </ObjectAnimationUsingKeyFrames>
                         </Storyboard>
