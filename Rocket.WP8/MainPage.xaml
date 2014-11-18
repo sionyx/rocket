@@ -52,9 +52,6 @@
                                  IsVisible="{Binding InProgress}" />
     </shell:SystemTray.ProgressIndicator>
 
-
-
-    <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -97,27 +94,37 @@
                               SelectedPoint="{Binding SelectedPoint, Mode=TwoWay}"
                               ClasterizationCondition="{Binding ClasterizationCondition}"
                               CurrentLocation="{Binding Path=GeoLocator.CurrentLocation, Source={StaticResource CompositionRoot}}" 
-                              LocationResolved="{Binding Path=GeoLocator.InProgress, Source={StaticResource CompositionRoot}, Converter={StaticResource RevertBooleanConverter}}" />
+                              LocationResolved="{Binding Path=GeoLocator.InProgress, Source={StaticResource CompositionRoot}, Converter={StaticResource RevertBooleanConverter}}" >
+                <i:Interaction.Behaviors>
+                    <ec:DataStateBehavior Binding="{Binding SelectedPoint}"
+                                  TrueState="InfoCardsClosed"
+                                  FalseState="InfoCardOpened" 
+                                  Value="{x:Null}">
+                    </ec:DataStateBehavior>
+                </i:Interaction.Behaviors>
+            </rocket:CashinMap>
                         
-            <!--<maps:Map x:Name="Map" ZoomLevelChanged="Map_OnZoomLevelChanged" CenterChanged="Map_OnCenterChanged" />
-
             <Grid x:Name="MapControlsGrid">
                 <Grid.RenderTransform>
                     <TranslateTransform />
                 </Grid.RenderTransform>
                 
-                <Button BorderThickness="0" Margin="0,0,24,96" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" Tap="ZoomIn">
+                <Button BorderThickness="0" Margin="0,0,24,96" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                        Command="{Binding Path=ZoomInCommand, ElementName=CashinMap}" >
                     <Image Source="Assets/but_zoom_in.png" Width="49" Height="49" />
                 </Button>
-            
-                <Button BorderThickness="0" Margin="0,0,24,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" Tap="ZoomOut">
+
+                <Button BorderThickness="0" Margin="0,0,24,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                        Command="{Binding Path=ZoomOutCommand, ElementName=CashinMap}" >
                     <Image Source="Assets/but_zoom_out.png" Width="49" Height="49" />
                 </Button>
 
-                <Button x:Name="ShowMeButton" BorderThickness="0" Margin="24,0,0,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Left" VerticalAlignment="Bottom" Tap="ShowMe">
+                <Button BorderThickness="0" Margin="24,0,0,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Left" VerticalAlignment="Bottom" 
+                        Command="{Binding Path=MoveToCurrentLocationCommand, ElementName=CashinMap}"
+                        IsEnabled="{Binding Path=GeoLocator.InProgress, Source={StaticResource CompositionRoot}, Converter={StaticResource RevertBooleanConverter}}">
                     <Image Source="Assets/but_me.png" Width="49" Height="49" />
                 </Button>
-            </Grid>-->
+            </Grid>
         </Grid>
 
 
@@ -243,11 +250,11 @@
                                          From="0"
                                          To="-240"
                                          Duration="0:0:0.3"/>
-                        <!--<DoubleAnimation Storyboard.TargetName="MapControlsGrid" 
+                        <DoubleAnimation Storyboard.TargetName="MapControlsGrid" 
                                          Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
                                          From="0"
                                          To="-240"
-                                         Duration="0:0:0.3"/>-->
+                                         Duration="0:0:0.3"/>
                     </Storyboard>
                 </VisualState>
                 <VisualStateGroup.Transitions>
@@ -261,10 +268,10 @@
                                          Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
                                          To="0"
                                          Duration="0:0:0.3"/>
-                            <!--<DoubleAnimation Storyboard.TargetName="MapControlsGrid" 
+                            <DoubleAnimation Storyboard.TargetName="MapControlsGrid" 
                                          Storyboard.TargetProperty="(Grid.RenderTransform).(TranslateTransform.Y)"
                                          To="0"
-                                         Duration="0:0:0.3"/>-->
+                                         Duration="0:0:0.3"/>
                             <ObjectAnimationUsingKeyFrames Storyboard.TargetName="InfoCardGrid" Storyboard.TargetProperty="Visibility">
                                 <DiscreteObjectKeyFrame KeyTime="0:0:0.3" Value="Collapsed" />
                             </ObjectAnimationUsingKeyFrames>

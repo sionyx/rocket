@@ -12,24 +12,5 @@
     
     <Grid x:Name="LayoutRoot" Background="{StaticResource PhoneChromeBrush}">
         <maps:Map x:Name="Map" ZoomLevelChanged="Map_OnZoomLevelChanged" CenterChanged="Map_OnCenterChanged" />
-
-        <Grid x:Name="MapControlsGrid">
-            <Grid.RenderTransform>
-                <TranslateTransform />
-            </Grid.RenderTransform>
-
-            <Button BorderThickness="0" Margin="0,0,24,96" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" Tap="ZoomIn">
-                <Image Source="/Assets/but_zoom_in.png" Width="49" Height="49" />
-            </Button>
-
-            <Button BorderThickness="0" Margin="0,0,24,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Right" VerticalAlignment="Bottom" Tap="ZoomOut">
-                <Image Source="/Assets/but_zoom_out.png" Width="49" Height="49" />
-            </Button>
-
-            <Button x:Name="ShowMeButton" BorderThickness="0" Margin="24,0,0,24" Padding="0" Width="72" Height="72" HorizontalAlignment="Left" VerticalAlignment="Bottom" Tap="ShowMe">
-                <Image Source="/Assets/but_me.png" Width="49" Height="49" />
-            </Button>
-        </Grid>
-
     </Grid>
 </UserControl>

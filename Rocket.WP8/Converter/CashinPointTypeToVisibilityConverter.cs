@@ -12,7 +12,7 @@ namespace Rocket.Converter
 		{
 		    if (!(value is string) || !(parameter is string)) return Visibility.Collapsed;
 
-		    return ((value as string).Equals(parameter as string))
+		    return ((value as string).Equals(parameter as string, StringComparison.InvariantCultureIgnoreCase))
 		        ? Visibility.Visible
 		        : Visibility.Collapsed;
 		}

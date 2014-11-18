@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using Microsoft.Expression.Interactivity.Core;
 using Microsoft.Phone.Maps.Controls;
 using Rocket.Data;
 using Rocket.Tools.Geo;
@@ -247,10 +248,6 @@ namespace Rocket.Controls
 
         private void SetLocationResolved(bool isLocationResolved)
         {
-            ShowMeButton.Visibility = isLocationResolved
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-
             if (_locationOverlay == null) return;
 
             if (isLocationResolved && !_locationLayer.Contains(_locationOverlay))
@@ -262,12 +259,19 @@ namespace Rocket.Controls
 
         #endregion
 
+        public ICommand MoveToCurrentLocationCommand { get; set; }
+        public ICommand ZoomInCommand { get; set; }
+        public ICommand ZoomOutCommand { get; set; }
 
         public CashinMap()
         {
             InitializeComponent();
             PrepareLayers();
             Loaded += OnLoaded;
+
+            MoveToCurrentLocationCommand = new ActionCommand(() => Map.SetView(_currentLocation, Map.ZoomLevel));
+            ZoomInCommand = new ActionCommand(() => Map.SetView(Map.Center, Map.ZoomLevel + 1));
+            ZoomOutCommand = new ActionCommand(() => Map.SetView(Map.Center, Map.ZoomLevel - 1));
         }
 
         #region INITIALIZATION
@@ -481,24 +485,6 @@ namespace Rocket.Controls
 
             element.Opacity = opacity;
         }
-
-        #endregion
-
-        #region MAP CONTROLS EVENTS
-
-        private void ZoomIn(object sender, GestureEventArgs e)
-        {
-            Map.SetView(Map.Center, Map.ZoomLevel + 1);
-        }
-        private void ZoomOut(object sender, GestureEventArgs e)
-        {
-            Map.SetView(Map.Center, Map.ZoomLevel - 1);
-        }
-        private void ShowMe(object sender, GestureEventArgs e)
-        {
-            Map.SetView(_currentLocation, Map.ZoomLevel);
-        }
-
 
         #endregion
     }
