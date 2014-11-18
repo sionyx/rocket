@@ -1,17 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
-  <DefaultLanguage xmlns="" code="en-US" />
+  <DefaultLanguage xmlns="" code="ru-RU" />
+  <Languages xmlns="">
+    <Language code="ru-RU" />
+  </Languages>
   <AppExtra AppPlatformVersion="8.0" xmlns="">
     <Extra Name="SDOptOut" />
   </AppExtra>
-  <App xmlns="" ProductID="{fb407cdb-4116-43b6-91a8-a3d44c97a7ab}" Title="Рокетбанк" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Rocket.WP8 author" Description="Приложение Рокетбанк для Windows Phone" Publisher="Rocket" PublisherID="{22712351-5656-4d4e-ad8f-2067fe98d693}">
+  <App xmlns="" ProductID="{fb407cdb-4116-43b6-91a8-a3d44c97a7ab}" Title="Рокетбанк" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="SiO Software" Description="Приложение Рокетбанк для Windows Phone" Publisher="Rocketbank" PublisherID="{22712351-5656-4d4e-ad8f-2067fe98d693}">
     <IconPath IsRelative="true" IsResource="false">AppIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />
-      <Capability Name="ID_CAP_MEDIALIB_AUDIO" />
-      <Capability Name="ID_CAP_MEDIALIB_PLAYBACK" />
-      <Capability Name="ID_CAP_SENSORS" />
-      <Capability Name="ID_CAP_WEBBROWSERCOMPONENT" />
       <Capability Name="ID_CAP_MAP" />
       <Capability Name="ID_CAP_LOCATION" />
     </Capabilities>

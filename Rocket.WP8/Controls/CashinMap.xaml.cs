@@ -17,6 +17,9 @@ namespace Rocket.Controls
 {
     public partial class CashinMap
     {
+        private const string ApplicationID = "c4ea29c3-5bf4-418e-b96d-b53842eefbf6";
+        private const string AuthenticationToken = "6SFrifSbB7rxCmZQu_EaBw";
+
         const int MaxClasterizationLevel = 14;
         const int MinClasterizationLevel = 6;
 
@@ -272,6 +275,14 @@ namespace Rocket.Controls
             MoveToCurrentLocationCommand = new ActionCommand(() => Map.SetView(_currentLocation, Map.ZoomLevel));
             ZoomInCommand = new ActionCommand(() => Map.SetView(Map.Center, Map.ZoomLevel + 1));
             ZoomOutCommand = new ActionCommand(() => Map.SetView(Map.Center, Map.ZoomLevel - 1));
+
+            Map.Loaded += MapOnLoaded;
+        }
+
+        private void MapOnLoaded(object sender, RoutedEventArgs routedEventArgs)
+        {
+            Microsoft.Phone.Maps.MapsSettings.ApplicationContext.ApplicationId = ApplicationID;
+            Microsoft.Phone.Maps.MapsSettings.ApplicationContext.AuthenticationToken = AuthenticationToken;
         }
 
         #region INITIALIZATION
