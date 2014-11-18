@@ -4,8 +4,8 @@
   <AppExtra AppPlatformVersion="8.0" xmlns="">
     <Extra Name="SDOptOut" />
   </AppExtra>
-  <App xmlns="" ProductID="{fb407cdb-4116-43b6-91a8-a3d44c97a7ab}" Title="Rocket" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Rocket.WP8 author" Description="Sample description" Publisher="Rocket" PublisherID="{22712351-5656-4d4e-ad8f-2067fe98d693}">
-    <IconPath IsRelative="true" IsResource="false">Assets\ApplicationIcon.png</IconPath>
+  <App xmlns="" ProductID="{fb407cdb-4116-43b6-91a8-a3d44c97a7ab}" Title="Рокетбанк" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Rocket.WP8 author" Description="Приложение Рокетбанк для Windows Phone" Publisher="Rocket" PublisherID="{22712351-5656-4d4e-ad8f-2067fe98d693}">
+    <IconPath IsRelative="true" IsResource="false">AppIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />
       <Capability Name="ID_CAP_MEDIALIB_AUDIO" />
@@ -21,10 +21,10 @@
     <Tokens>
       <PrimaryToken TokenID="Rocket.WP8Token" TaskName="_default">
         <TemplateFlip>
-          <SmallImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileSmall.png</SmallImageURI>
+          <SmallImageURI IsRelative="true" IsResource="false">TileSmall.png</SmallImageURI>
           <Count>0</Count>
-          <BackgroundImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileMedium.png</BackgroundImageURI>
-          <Title>Rocket</Title>
+          <BackgroundImageURI IsRelative="true" IsResource="false">TileMedium.png</BackgroundImageURI>
+          <Title>Рокетбанк</Title>
           <BackContent>
           </BackContent>
           <BackBackgroundImageURI>
